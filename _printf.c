@@ -1,22 +1,73 @@
 #include "main.h"
+
+void print_buffer(char buffer[], int *buff_ind);
+
 /**
- * _printf - prints formatted output to stdout
+ * _printf - Printf function
  * @format: format string
- * Return: number of characters printed
+ * Return: number of printed characters
  */
 int _printf(const char *format, ...)
 {
-	va_list args;
-	char buffer[1024];
-	int chars_written;
-
-	va_start(args, format);
-	chars_written = vsnprintf(buffer, sizeof(buffer), format, args);
-	va_end(args);
-
-	if (chars_written >= 0 && chars_written < sizeof(buffer))
-		write(1, buffer, chars_written);
-	else
+	if (format == NULL)
 		return (-1);
-	return (chars_written);
+
+	int printed_chars = 0;
+	va_list arg_list;
+	char buffer[BUFF_SIZE];
+	int buffer_index = 0;
+
+	va_start(arg_list, format);
+
+	for (int i = 0; format[i] != '\0'; i++)
+	{
+		if (format[i] != '%')
+		{
+			buffer[buffer_index++] = format[i];
+
+			if (buffer_index == BUFF_SIZE)
+			{
+				print_buffer(buffer, &buffer_index);
+			}
+			printed_chars++;
+		}
+		else
+		{
+			print_buffer(buffer, &buffer_index);
+			const int flags = get_flags(format, &i);
+			const int field_width = get_width(format, &i, arg_list);
+			const int precision = get_precision(format, &i, arg_list);
+			const int size_modifier = get_size(format, &i);
+			++i;
+			const int printed = handle_print(format, &i, arg_list,
+					buffer, flags, field_width, precision, size_modifier);
+
+			if (printed == -1)
+			{
+				va_end(arg_list);
+				return (-1);
+			}
+			printed_chars += printed;
+
+		}
+	}
+	print_buffer(buffer, &buffer_index);
+	va_end(arg_list);
+	return (printed_chars);
+}
+
+/**
+ * print_buffer - Prints the contents of the buffer
+ * @buffer: character array
+ * @buff_ind: pointer to buffer index
+ */
+void print_buffer(char buffer[], int *buff_ind)
+{
+	if (*buff_ind > 0)
+	{
+		write(1, buffer, *buff_ind);
+	}
+
+	*buff_ind = 0;
+
 }
