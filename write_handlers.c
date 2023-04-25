@@ -1,7 +1,3 @@
-write_handlers.c
-
-
-
 #include "main.h"
 
 /********* WRITE HANDLE *********/
